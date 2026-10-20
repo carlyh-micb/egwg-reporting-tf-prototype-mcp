@@ -25,6 +25,9 @@ data/raw/**/*.vtt
 data/raw/**/*.txt
 data/processed/**/*.json
 
+# Ingestion registry
+data/ingestion_registry.json
+
 # Keep examples
 !data/**/metadata.json
 !data/**/.gitkeep
