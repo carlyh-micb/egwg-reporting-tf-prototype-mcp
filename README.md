@@ -4,9 +4,14 @@
 
 This project provides a framework for collecting, normalizing, indexing, and retrieving organizational knowledge from multiple source systems.
 
-Content is transformed into a common document model, indexed for semantic search, and exposed through a Model Context Protocol (MCP) server for consumption by tools and applications.
+Content is collected in its original format, transformed into a common document model, assigned a SAID, indexed for semantic search, and exposed through an MCP server.
 
-The platform is designed to support knowledge discovery across research administration, project management, governance, and collaborative workflows.
+Supported and planned sources include:
+
+- Zoom
+- Confluence
+- GitHub
+- YouTube
 
 ---
 
@@ -15,277 +20,251 @@ The platform is designed to support knowledge discovery across research administ
 ```text
 Source Systems
     ↓
-Content Collection
+Raw Content
     ↓
-Normalized Documents
+Ingestion Engine
+    ↓
+Source Parser
+    ↓
+Document Model
+    ↓
+SAID Generation
+    ↓
+Processed Documents
     ↓
 Chunking
     ↓
-Embedding Generation
+Embeddings
     ↓
 Vector Index
     ↓
 MCP Server
-    ↓
-Client Applications
 ```
-
----
-
-## Source Systems
-
-Content may be collected from a variety of sources, including:
-
-- Zoom
-- GitHub
-- Confluence
-- YouTube
-
-The architecture is designed to support additional content sources over time.
-
----
-
-## Normalized Document Model
-
-All source content is transformed into a common structure before indexing.
-
-Example:
-
-```json
-{
-  "id": "",
-  "project": "",
-  "organizational_unit": [],
-  "date": "",
-  "source_system": "",
-  "asset_type": "",
-  "content_type": "",
-  "title": "",
-  "identifier": "",
-  "identifier_type": "SAID",
-  "source_url": "",
-  "content": "",
-  "collected_at": ""
-}
-```
-
-### Field Definitions
-
-| Field | Description |
-|---------|-------------|
-| id | Unique document identifier |
-| project | Associated project or initiative |
-| organizational_unit | Associated organizational groups |
-| date | Source content date |
-| source_system | Origin system |
-| asset_type | Type of asset being represented |
-| content_type | Type of content extracted |
-| title | Human-readable title |
-| identifier | Persistent identifier |
-| identifier_type | Identifier scheme |
-| source_url | Original source location |
-| content | Text content used for indexing |
-| collected_at | Collection timestamp |
-
----
-
-## Content Types
-
-Examples of supported content include:
-
-- Transcript
-- Closed Captioning
-- Chat
-- AI Summary
-- Discussion Notes
-
-Additional content types may be incorporated as requirements evolve.
 
 ---
 
 ## Repository Structure
 
-### `mcp_data_generation`
+```text
+data/
+├── raw/
+├── processed/
+└── ingestion_registry.json
+```
 
-Responsible for collecting and normalizing content from source systems.
+### Raw Content
 
-Functions include:
+Raw content is retained in its original format and serves as the system of record.
 
-- Content acquisition
-- Metadata extraction
-- Content normalization
-- JSON document generation
-- Identifier assignment
-
-Outputs:
+Examples:
 
 ```text
-Normalized JSON Documents
+.vtt
+.txt
+.md
+.html
+.pdf
+.json
+```
+
+Example:
+
+```text
+data/raw/zoom/egwg/
+├── metadata.json
+├── GMT20261001-145557_Recording.transcript.vtt
+├── GMT20261001-145557_Recording.cc.vtt
+└── GMT20261001-145557_RecordingnewChat.txt
+```
+
+### Organizational Metadata
+
+Each organizational unit may contain a `metadata.json` file.
+
+Example:
+
+```json
+{
+  "project": "Trust over IP",
+  "organizational_unit": [
+    "Ecosystem Governance Working Group"
+  ],
+  "title": "Ecosystem Governance Working Group Meeting"
+}
+```
+
+This metadata is inherited by content within the folder hierarchy.
+
+---
+
+## Ingestion Engine
+
+The ingestion engine:
+
+- Walks the `data/raw` directory tree
+- Detects source systems
+- Dispatches files to source-specific parsers
+- Maintains an ingestion registry
+- Generates SAIDs
+- Saves processed documents
+
+Current parser:
+
+- Zoom
+
+Future parsers:
+
+- Confluence
+- GitHub
+- YouTube
+
+---
+
+## Ingestion Registry
+
+The ingestion registry prevents reprocessing unchanged files.
+
+Example:
+
+```json
+{
+  "data/raw/zoom/egwg/file.vtt": {
+    "file_hash": "...",
+    "processed_at": "..."
+  }
+}
+```
+
+Processing logic:
+
+```text
+File discovered
+    ↓
+Calculate SHA-256
+    ↓
+Compare with registry
+    ↓
+Unchanged → Skip
+Changed → Process
 ```
 
 ---
 
-### `mcp_embeddings`
+## Document Model
 
-Responsible for preparing content for semantic search.
+All content is normalized into a common structure before indexing.
 
-Functions include:
+```json
+{
+  "identifier": "",
 
-- Document chunking
-- Embedding generation
-- Index construction
-- Search optimization
+  "project": "",
+  "organizational_unit": [],
 
-Outputs:
+  "source_system": "",
+  "source_identifier": "",
+
+  "date": "",
+
+  "asset_type": "",
+  "content_type": "",
+  "title": "",
+
+  "content": ""
+}
+```
+
+### Fields
+
+| Field | Description |
+|---------|-------------|
+| identifier | SAID assigned to the normalized document |
+| project | Associated project or initiative |
+| organizational_unit | Associated organizational groups |
+| source_system | Origin system |
+| source_identifier | Native identifier from the source system |
+| date | Date associated with the content |
+| asset_type | High-level asset type |
+| content_type | Type of extracted content |
+| title | Human-readable title |
+| content | Text used for indexing and retrieval |
+
+---
+
+## Processing Pipeline
 
 ```text
-Chunks
+Raw File
+    ↓
+Source Parser
+    ↓
+Document Model
+    ↓
+SAID Generation
+    ↓
+Processed JSON Document
+```
+
+Processed documents are the input for:
+
+```text
+Chunking
+    ↓
 Embeddings
-Vector Index
+    ↓
+Vector Search
 ```
 
 ---
 
-### `toip-mcp-server`
+## Components
 
-Provides access to indexed content through MCP.
+### mcp_data_generation
 
-Current capabilities include:
+Responsible for:
+
+- Content discovery
+- Metadata loading
+- Parsing source content
+- Document normalization
+- SAID generation
+
+Output:
+
+```text
+Processed JSON Documents
+```
+
+### mcp_embeddings
+
+Responsible for:
+
+- Chunking
+- Embedding generation
+- Vector index creation
+
+### toip-mcp-server
+
+Provides retrieval capabilities through MCP.
+
+Current tools:
 
 ```text
 search()
 list_documents()
 ```
 
-Responsibilities:
+### mcp_testing
 
-- Query processing
-- Embedding-based retrieval
-- Metadata filtering
-- Result ranking
-- MCP tool exposure
-
----
-
-### `mcp_testing`
-
-A lightweight client used to evaluate and test MCP functionality.
-
-Typical activities include:
-
-- Connecting to MCP servers
-- Executing tool calls
-- Inspecting responses
-- Verifying retrieval behavior
-- Testing metadata filters
-- Evaluating search quality
-
-Example workflow:
-
-```text
-list_documents()
-    ↓
-JSON Results
-```
-
-```text
-search("registry governance")
-    ↓
-Ranked Search Results
-```
-
----
-
-## Data Processing Pipeline
-
-### Document Preparation
-
-```text
-Source Content
-    ↓
-Normalization
-    ↓
-JSON Documents
-```
-
-### Index Construction
-
-```text
-JSON Documents
-    ↓
-Chunking
-    ↓
-Embeddings
-    ↓
-Vector Index
-```
-
-### Retrieval
-
-```text
-Query
-    ↓
-Embedding
-    ↓
-Vector Search
-    ↓
-Ranked Results
-```
-
----
-
-## Development Environment
-
-The platform is intended to support local development and testing.
-
-A typical local deployment consists of:
-
-```text
-Source Systems
-    ↓
-Document Generation
-    ↓
-Embedding Pipeline
-    ↓
-Vector Index
-    ↓
-MCP Server
-    ↓
-Client Applications
-```
-
-This architecture enables development, experimentation, and evaluation without requiring external infrastructure.
+Client used for testing and validating MCP retrieval behavior.
 
 ---
 
 ## Objectives
 
-The project aims to:
-
-- Create a reusable content ingestion framework.
-- Establish a consistent document model across sources.
-- Enable semantic retrieval across organizational knowledge.
-- Expose retrieval capabilities through MCP.
-- Support experimentation with knowledge discovery workflows.
-- Provide a foundation for future applications and integrations.
-
----
-
-## Future Enhancements
-
-Potential areas of future development include:
-
-- Additional source connectors
-- Persistent identifier integration
-- Hybrid retrieval strategies
-- Advanced metadata filtering
-- Evaluation datasets and benchmarking
-- Knowledge graph integration
-- Additional MCP tools
-- Centralized deployment options
-
----
-
-## License
-
-To be determined.
+- Support multiple content sources.
+- Preserve original source artifacts.
+- Normalize content into a common model.
+- Generate persistent document identifiers.
+- Enable semantic search and retrieval.
+- Expose knowledge through MCP.
