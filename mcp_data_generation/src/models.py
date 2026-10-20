@@ -12,6 +12,7 @@ class Document:
 
     source_system: str = ""
     source_identifier: str = ""
+    source_url: str = ""
 
     date: str = ""
 

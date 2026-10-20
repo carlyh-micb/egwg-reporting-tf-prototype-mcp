@@ -1,270 +1,71 @@
-# MCP Knowledge Retrieval Platform
+# ToIP MCP Server
 
-## Overview
+Local MCP server for semantic search over ToIP meeting transcripts, closed captions, and chat logs. No API key required — embeddings run locally via `@xenova/transformers`.
 
-This project provides a framework for collecting, normalizing, indexing, and retrieving organizational knowledge from multiple source systems.
+## Setup
 
-Content is collected in its original format, transformed into a common document model, assigned a SAID, indexed for semantic search, and exposed through an MCP server.
-
-Supported and planned sources include:
-
-- Zoom
-- Confluence
-- GitHub
-- YouTube
-
----
-
-## Architecture
-
-```text
-Source Systems
-    ↓
-Raw Content
-    ↓
-Ingestion Engine
-    ↓
-Source Parser
-    ↓
-Document Model
-    ↓
-SAID Generation
-    ↓
-Processed Documents
-    ↓
-Chunking
-    ↓
-Embeddings
-    ↓
-Vector Index
-    ↓
-MCP Server
+```bash
+npm install
 ```
 
----
+## Ingest
 
-## Repository Structure
+Fetches all documents from the data repo, chunks them, embeds with a local model, and writes a local vector index (~25 MB model downloaded on first run):
 
-```text
-data/
-├── raw/
-├── processed/
-└── ingestion_registry.json
+```bash
+npm run ingest
 ```
 
-### Raw Content
+## Run
 
-Raw content is retained in its original format and serves as the system of record.
-
-Examples:
-
-```text
-.vtt
-.txt
-.md
-.html
-.pdf
-.json
+```bash
+npm start
 ```
 
-Example:
+## Cursor / Claude Desktop config
 
-```text
-data/raw/zoom/egwg/
-├── metadata.json
-├── GMT20261001-145557_Recording.transcript.vtt
-├── GMT20261001-145557_Recording.cc.vtt
-└── GMT20261001-145557_RecordingnewChat.txt
-```
-
-### Organizational Metadata
-
-Each organizational unit may contain a `metadata.json` file.
-
-Example:
+Add to your MCP config:
 
 ```json
 {
-  "project": "Trust over IP",
-  "organizational_unit": [
-    "Ecosystem Governance Working Group"
-  ],
-  "title": "Ecosystem Governance Working Group Meeting"
-}
-```
-
-This metadata is inherited by content within the folder hierarchy.
-
----
-
-## Ingestion Engine
-
-The ingestion engine:
-
-- Walks the `data/raw` directory tree
-- Detects source systems
-- Dispatches files to source-specific parsers
-- Maintains an ingestion registry
-- Generates SAIDs
-- Saves processed documents
-
-Current parser:
-
-- Zoom
-
-Future parsers:
-
-- Confluence
-- GitHub
-- YouTube
-
----
-
-## Ingestion Registry
-
-The ingestion registry prevents reprocessing unchanged files.
-
-Example:
-
-```json
-{
-  "data/raw/zoom/egwg/file.vtt": {
-    "file_hash": "...",
-    "processed_at": "..."
+  "mcpServers": {
+    "toip-knowledge-base": {
+      "command": "node",
+      "args": ["/absolute/path/to/toip-mcp-server/dist/index.js"]
+    }
   }
 }
 ```
 
-Processing logic:
-
-```text
-File discovered
-    ↓
-Calculate SHA-256
-    ↓
-Compare with registry
-    ↓
-Unchanged → Skip
-Changed → Process
-```
-
----
-
-## Document Model
-
-All content is normalized into a common structure before indexing.
+Or for development (no build step):
 
 ```json
 {
-  "identifier": "",
-
-  "project": "",
-  "organizational_unit": [],
-
-  "source_system": "",
-  "source_identifier": "",
-
-  "date": "",
-
-  "asset_type": "",
-  "content_type": "",
-  "title": "",
-
-  "content": ""
+  "mcpServers": {
+    "toip-knowledge-base": {
+      "command": "npx",
+      "args": ["tsx", "/absolute/path/to/toip-mcp-server/src/index.ts"]
+    }
+  }
 }
 ```
 
-### Fields
+## Tools
+
+- **search** — semantic search over all document chunks. Returns matching passages with title, date, WG, source, and identifier. Supports optional `filter_wg` to narrow by working group.
+- **list_documents** — list all indexed documents with metadata.
+
+## Data schema
+
+Each document follows the schema at [carlyh-micb/mcp_data_generation](https://github.com/carlyh-micb/mcp_data_generation):
 
 | Field | Description |
-|---------|-------------|
-| identifier | SAID assigned to the normalized document |
-| project | Associated project or initiative |
-| organizational_unit | Associated organizational groups |
-| source_system | Origin system |
-| source_identifier | Native identifier from the source system |
-| date | Date associated with the content |
-| asset_type | High-level asset type |
-| content_type | Type of extracted content |
-| title | Human-readable title |
-| content | Text used for indexing and retrieval |
-
----
-
-## Processing Pipeline
-
-```text
-Raw File
-    ↓
-Source Parser
-    ↓
-Document Model
-    ↓
-SAID Generation
-    ↓
-Processed JSON Document
-```
-
-Processed documents are the input for:
-
-```text
-Chunking
-    ↓
-Embeddings
-    ↓
-Vector Search
-```
-
----
-
-## Components
-
-### mcp_data_generation
-
-Responsible for:
-
-- Content discovery
-- Metadata loading
-- Parsing source content
-- Document normalization
-- SAID generation
-
-Output:
-
-```text
-Processed JSON Documents
-```
-
-### mcp_embeddings
-
-Responsible for:
-
-- Chunking
-- Embedding generation
-- Vector index creation
-
-### toip-mcp-server
-
-Provides retrieval capabilities through MCP.
-
-Current tools:
-
-```text
-search()
-list_documents()
-```
-
-### mcp_testing
-
-Client used for testing and validating MCP retrieval behavior.
-
----
-
-## Objectives
-
-- Support multiple content sources.
-- Preserve original source artifacts.
-- Normalize content into a common model.
-- Generate persistent document identifiers.
-- Enable semantic search and retrieval.
-- Expose knowledge through MCP.
+|---|---|
+| `id` | Stable human-readable identifier |
+| `project` | e.g. "Trust over IP" |
+| `organizational_unit` | WG/TF array |
+| `date` | Meeting or publication date |
+| `source_system` | Zoom, GitHub, Confluence, YouTube... |
+| `content_type` | Transcript, ClosedCaptioning, Chat... |
+| `identifier` | SAID (`urn:said:...`) |
+| `content` | Full text (chunked for search) |

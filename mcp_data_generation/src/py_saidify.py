@@ -38,7 +38,7 @@ def py_verify(sad: dict, said: str, label: str = "d") -> bool:
             f"Cannot verify self addressing data without digest field {label}"
         )
 
-    derived, _ = saidify(sad, label)
+    derived, _ = py_saidify(sad, label)
 
     return (
         compare_digest(derived, said)
@@ -73,5 +73,5 @@ def py_saidify_urn(data: dict, label: str = "d") -> tuple[str, dict]:
     return urn, sad
 
 def py_verify_urn(sad: dict, urn: str, label: str = "d") -> bool:
-    derived, _ = saidify_urn(sad, label)
+    derived, _ = py_saidify_urn(sad, label)
     return compare_digest(derived, urn)

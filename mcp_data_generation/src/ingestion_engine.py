@@ -82,7 +82,7 @@ def main() -> None:
 
         file_hash = _sha256_file(file_path)
 
-        registry_entry = registry.get(str(file_path))
+        registry_entry = registry.get(file_path.as_posix())
 
         if (
             registry_entry
@@ -93,6 +93,9 @@ def main() -> None:
 
         document = _process_file(file_path)
 
+        if document is None:
+            continue
+
         document_dict = asdict(document)
 
         said, document_dict = py_saidify(
@@ -102,7 +105,7 @@ def main() -> None:
 
         _save_document(document_dict)
 
-        registry[str(file_path)] = {
+        registry[file_path.as_posix()] = {
             "file_hash": file_hash,
             "document_said": said,
             "processed_at": datetime.now(

@@ -102,6 +102,7 @@ def _build_document(
         organizational_unit=metadata["organizational_unit"],
         source_system="Zoom",
         source_identifier=_extract_source_identifier(file_path),
+        source_url=metadata.get("source_url", ""),
         date=date_object.strftime("%Y-%m-%d"),
         asset_type="Meeting",
         content_type=content_type,

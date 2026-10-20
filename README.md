@@ -89,7 +89,8 @@ Example:
   "organizational_unit": [
     "Ecosystem Governance Working Group"
   ],
-  "title": "Ecosystem Governance Working Group Meeting"
+  "title": "Ecosystem Governance Working Group Meeting",
+  "source_url":""
 }
 ```
 
@@ -163,6 +164,7 @@ All content is normalized into a common structure before indexing.
 
   "source_system": "",
   "source_identifier": "",
+  "source_url": "",
 
   "date": "",
 
@@ -183,6 +185,7 @@ All content is normalized into a common structure before indexing.
 | organizational_unit | Associated organizational groups |
 | source_system | Origin system |
 | source_identifier | Native identifier from the source system |
+| source_url | URL where the content originated |
 | date | Date associated with the content |
 | asset_type | High-level asset type |
 | content_type | Type of extracted content |
