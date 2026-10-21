@@ -34,9 +34,20 @@ def process(file_path: Path) -> Document:
 
     return document
 
-def _get_content_type(file_path: Path) -> str | None:
-    file_name = file_path.name.lower()
+def _is_zoom_export_file(file_path: Path) -> bool:
+    return bool(
+        re.match(
+            r"^GMT\d{8}-\d{6}_Recording.*\.(txt|vtt)$",
+            file_path.name,
+            re.IGNORECASE,
+        )
+    )
 
+def _get_content_type(file_path: Path) -> str | None:
+    if not _is_zoom_export_file(file_path):
+        return None
+
+    file_name = file_path.name.lower()
     if file_name.endswith(".txt"):
         return "Chat"
 
