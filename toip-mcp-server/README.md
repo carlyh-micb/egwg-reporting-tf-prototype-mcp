@@ -1,6 +1,6 @@
 # ToIP MCP Server
 
-Local MCP server for semantic search over ToIP meeting transcripts, closed captions, and chat logs. No API key required — embeddings run locally via `@xenova/transformers`.
+Local MCP server for semantic search over ToIP meeting transcripts, closed captions, and chat logs. No API key required — embeddings run locally via `fastembed`.
 
 ## Setup
 
@@ -15,6 +15,17 @@ Fetches all documents from the data repo, chunks them, embeds with a local model
 ```bash
 npm run ingest
 ```
+
+## Query the index directly
+
+Prints the raw JSON of the top matching chunks (5 by default, up to 20), without going through the MCP server:
+
+```bash
+npm run query "bite size trust scripts"
+npm run query -- --limit 10 "bite size trust scripts"
+```
+
+The results are unfiltered, straight from the index. They can differ from the MCP `search` tool when `filter_wg` is used, because the tool filters by working group after querying. Scores are the same for the same query, since both use the same embedding and index.
 
 ## Run
 

@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
-    "ingest": "tsx src/ingest.ts"
+    "ingest": "tsx src/ingest.ts",
+    "query": "tsx src/query.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
