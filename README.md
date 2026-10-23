@@ -4,9 +4,9 @@
 
 This project provides a framework for collecting, normalizing, indexing, and retrieving organizational knowledge from multiple source systems.
 
-Content is collected in its original format, transformed into a common document model, assigned a persistent identifier (SAID), indexed for semantic search, and exposed through an MCP server.
+Content is collected in its original format, transformed into a common document model, assigned a SAID, indexed for semantic search, and exposed through an MCP server.
 
-Supported and planned content sources include:
+Supported and planned sources include:
 
 - Zoom
 - Confluence
@@ -15,7 +15,7 @@ Supported and planned content sources include:
 
 ---
 
-## High-Level Architecture
+## Architecture
 
 ```text
 Source Systems
