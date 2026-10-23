@@ -4,9 +4,9 @@
 
 This project provides a framework for collecting, normalizing, indexing, and retrieving organizational knowledge from multiple source systems.
 
-Content is collected in its original format, transformed into a common document model, assigned a SAID, indexed for semantic search, and exposed through an MCP server.
+Content is collected in its original format, transformed into a common document model, assigned a persistent identifier (SAID), indexed for semantic search, and exposed through an MCP server.
 
-Supported and planned sources include:
+Supported and planned content sources include:
 
 - Zoom
 - Confluence
@@ -15,259 +15,197 @@ Supported and planned sources include:
 
 ---
 
-## Architecture
+## High-Level Architecture
 
 ```text
 Source Systems
     ↓
-Raw Content
+Content Acquisition
     ↓
-Ingestion Engine
+Knowledge Normalization
     ↓
-Source Parser
+Knowledge Indexing
     ↓
-Document Model
-    ↓
-SAID Generation
-    ↓
-Processed Documents
-    ↓
-Chunking
-    ↓
-Embeddings
-    ↓
-Vector Index
-    ↓
-MCP Server
+MCP Retrieval Layer
+```
+
+The platform is organized around architectural workstreams rather than repository structure.
+
+For detailed architecture, data models, ownership boundaries, and contributor guidance, see:
+
+```text
+AGENTS.md
 ```
 
 ---
 
-## Repository Structure
+## Knowledge Lifecycle
 
 ```text
-data/
-├── raw/
-├── processed/
-└── ingestion_registry.json
+Raw Artifact
+    ↓
+Normalized Document
+    ↓
+Embedded Chunk
+    ↓
+Vector Index Entry
+
+Search Result
+    ↑
+Retrieval-time join
 ```
 
-### Raw Content
+---
 
-Raw content is retained in its original format and serves as the system of record.
+## Major Workstreams
+
+### Content Acquisition
+
+Collect and preserve content from source systems.
 
 Examples:
 
-```text
-.vtt
-.txt
-.md
-.html
-.pdf
-.json
-```
-
-Example:
-
-```text
-data/raw/zoom/egwg/
-├── metadata.json
-├── GMT20261001-145557_Recording.transcript.vtt
-├── GMT20261001-145557_Recording.cc.vtt
-└── GMT20261001-145557_RecordingnewChat.txt
-```
-
-### Organizational Metadata
-
-Each organizational unit may contain a `metadata.json` file.
-
-Example:
-
-```json
-{
-  "project": "Trust over IP",
-  "organizational_unit": [
-    "Ecosystem Governance Working Group"
-  ],
-  "title": "Ecosystem Governance Working Group Meeting",
-  "source_url":""
-}
-```
-
-This metadata is inherited by content within the folder hierarchy.
-
----
-
-## Ingestion Engine
-
-The ingestion engine:
-
-- Walks the `data/raw` directory tree
-- Detects source systems
-- Dispatches files to source-specific parsers
-- Maintains an ingestion registry
-- Generates SAIDs
-- Saves processed documents
-
-Current parser:
-
 - Zoom
-
-Future parsers:
-
 - Confluence
 - GitHub
 - YouTube
+- Future content sources
 
----
-
-## Ingestion Registry
-
-The ingestion registry prevents reprocessing unchanged files.
-
-Example:
-
-```json
-{
-  "data/raw/zoom/egwg/file.vtt": {
-    "file_hash": "...",
-    "processed_at": "..."
-  }
-}
-```
-
-Processing logic:
+Output:
 
 ```text
-File discovered
-    ↓
-Calculate SHA-256
-    ↓
-Compare with registry
-    ↓
-Unchanged → Skip
-Changed → Process
+Raw Artifact
 ```
 
----
+### Knowledge Normalization
 
-## Document Model
+Transform source-specific content into a canonical representation.
 
-All content is normalized into a common structure before indexing.
+Examples:
 
-```json
-{
-  "identifier": "",
-
-  "project": "",
-  "organizational_unit": [],
-
-  "source_system": "",
-  "source_identifier": "",
-  "source_url": "",
-
-  "date": "",
-
-  "asset_type": "",
-  "content_type": "",
-  "title": "",
-
-  "content": ""
-}
-```
-
-### Fields
-
-| Field | Description |
-|---------|-------------|
-| identifier | SAID assigned to the normalized document |
-| project | Associated project or initiative |
-| organizational_unit | Associated organizational groups |
-| source_system | Origin system |
-| source_identifier | Native identifier from the source system |
-| source_url | URL where the content originated |
-| date | Date associated with the content |
-| asset_type | High-level asset type |
-| content_type | Type of extracted content |
-| title | Human-readable title |
-| content | Text used for indexing and retrieval |
-
----
-
-## Processing Pipeline
-
-```text
-Raw File
-    ↓
-Source Parser
-    ↓
-Document Model
-    ↓
-SAID Generation
-    ↓
-Processed JSON Document
-```
-
-Processed documents are the input for:
-
-```text
-Chunking
-    ↓
-Embeddings
-    ↓
-Vector Search
-```
-
----
-
-## Components
-
-### mcp_data_generation
-
-Responsible for:
-
-- Content discovery
-- Metadata loading
-- Parsing source content
-- Document normalization
+- Source parsers
+- Metadata inheritance
+- Validation
 - SAID generation
 
 Output:
 
 ```text
-Processed JSON Documents
+Normalized Document
 ```
 
-### mcp_embeddings
+### Knowledge Indexing
 
-Responsible for:
+Prepare normalized knowledge for semantic retrieval.
+
+Examples:
 
 - Chunking
-- Embedding generation
+- Embeddings
 - Vector index creation
 
-### toip-mcp-server
-
-Provides retrieval capabilities through MCP.
-
-Current tools:
+Output:
 
 ```text
-search()
-list_documents()
+Embedded Chunk
+Vector Index Entry
 ```
 
-### mcp_testing
+### MCP Retrieval Layer
 
-Client used for testing and validating MCP retrieval behavior.
+Expose indexed knowledge through MCP tools.
+
+Examples:
+
+- Search
+- Metadata filtering
+- Document discovery
+
+Output:
+
+```text
+Search Result
+```
+
+### Testing & Evaluation
+
+Validate retrieval quality and system behavior.
+
+Examples:
+
+- Retrieval testing
+- Regression testing
+- Benchmark datasets
 
 ---
 
-## Objectives
+## Repository Components
 
-- Support multiple content sources.
-- Preserve original source artifacts.
-- Normalize content into a common model.
-- Generate persistent document identifiers.
-- Enable semantic search and retrieval.
-- Expose knowledge through MCP.
+### mcp_data_generation
+
+Responsible for knowledge normalization.
+
+Examples:
+
+- Parsing
+- Validation
+- Metadata inheritance
+- SAID generation
+
+Produces:
+
+```text
+Normalized Documents
+```
+
+### toip-mcp-server
+
+Responsible for knowledge indexing and retrieval.
+
+Examples:
+
+- Chunking
+- Embeddings
+- Vector indexing
+- MCP tools
+
+Produces:
+
+```text
+Vector Index
+MCP Search Tools
+```
+
+### Testing Utilities
+
+Support validation, retrieval testing, and benchmarking.
+
+---
+
+## Design Principles
+
+- Preserve raw content as the system of record.
+- Normalize source content into a canonical representation.
+- Maintain clear boundaries between workstreams.
+- Treat vector indexes as rebuildable derived artifacts.
+- Expose knowledge through retrieval rather than direct source access.
+
+---
+
+## Contributor Guidance
+
+Contributors should review:
+
+```text
+AGENTS.md
+```
+
+before making architectural, data model, indexing, or retrieval changes.
+
+AGENTS.md contains:
+
+- Workstream definitions
+- Data model definitions
+- Ownership boundaries
+- Architectural principles
+- Contribution guidance
