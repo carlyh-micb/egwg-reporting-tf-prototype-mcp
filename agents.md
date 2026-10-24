@@ -183,7 +183,8 @@ The platform uses explicit data-model handoffs between workstreams.
 
 Each workstream owns specific models and is responsible only for the transformations within its scope.
 
-The models below are the architectural source of truth for information flowing through the platform.
+The models below will be the architectural source of truth for information flowing through the platform.
+Currently this is under development in https://github.com/trustoverip/egwg-reporting-tf-prototype-mcp/issues/8
 
 ---
 
@@ -273,6 +274,8 @@ Responsibilities:
 ## Embedded Chunk
 
 Minimal searchable unit derived from a normalized document.
+
+The Embedded Chunk intentionally carries fields such as date, content_type, and organizational_unit for filtering. This is selective propagation of retrieval-essential metadata rather than duplication of full provenance.
 
 Owned by:
 
